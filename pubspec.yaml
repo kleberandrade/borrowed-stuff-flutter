@@ -1,0 +1,31 @@
+name: borrowed_stuff
+description: A new Flutter project.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.1.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^0.1.2
+  flutter_slidable: ^0.5.4
+  image_picker: ^0.6.3+4
+  flushbar: ^1.9.1
+
+  # Data e internacionalização
+  datetime_picker_formfield: ^1.0.0
+  intl: ^0.16.0
+  flutter_localizations:
+    sdk: flutter
+  
+  # Banco de dados (produção)
+  path_provider: ^1.6.5
+  sembast: ^2.3.0
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
