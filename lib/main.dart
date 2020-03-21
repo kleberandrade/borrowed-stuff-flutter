@@ -29,6 +29,7 @@ class MyApp extends StatelessWidget {
     );
   }
 
+  // Ciando um tema para o projeto
   _buildTheme() {
     return ThemeData(
       brightness: Brightness.dark,
