@@ -2,7 +2,7 @@
 
 Aplicativo para lembrar dos objetos emprestados criado na disciplina de Programação Mobile, por Kleber de Oliveira Andrade.
 
-Tutorial de criação deste app (clique aqui)[https://medium.com/@kleberandrade/criando-um-aplicativo-para-lembrar-dos-objetos-emprestados-com-flutter-e-sembast-6dbf350a7a56].
+Tutorial de criação deste app [clique aqui](https://medium.com/@kleberandrade/criando-um-aplicativo-para-lembrar-dos-objetos-emprestados-com-flutter-e-sembast-6dbf350a7a56).
 
 <p align="center">
     <img src="https://cdn-images-1.medium.com/max/400/1*YjS4wUASqCh4TFEeEHKPpA.png" width="250"/>
