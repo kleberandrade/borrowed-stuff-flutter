@@ -5,10 +5,17 @@ Aplicativo para lembrar dos objetos emprestados criado na disciplina de Programa
 Tutorial de criação deste app [clique aqui](https://medium.com/@kleberandrade/criando-um-aplicativo-para-lembrar-dos-objetos-emprestados-com-flutter-e-sembast-6dbf350a7a56).
 
 <p align="center">
-    <img src="https://cdn-images-1.medium.com/max/400/1*YjS4wUASqCh4TFEeEHKPpA.png" width="250"/>
-    <img src="https://cdn-images-1.medium.com/max/400/1*XZIMgoUfDc_bkr-fhzWvrA.png" width="250"/>
-    <img src="https://cdn-images-1.medium.com/max/400/1*fiP5mrr67aDnF3uPc3dRxQ.png" width="250"/>
+    <img src="https://miro.medium.com/max/720/1*trhQYyzZfIj_LsYQGOQ8Vg.png" width="250"/>
+    <img src="https://miro.medium.com/max/720/1*rcw9WulfFColELibTQsA8w.png" width="250"/>
+    <img src="https://miro.medium.com/max/720/1*fiP5mrr67aDnF3uPc3dRxQ.png" width="250"/>
 </p>
+
+<p align="center">
+    <img src="https://miro.medium.com/max/720/1*XZIMgoUfDc_bkr-fhzWvrA.png" width="250"/>
+    <img src="https://miro.medium.com/max/720/1*bRGL1qXFTrtI8NeqUEqBcQ.png" width="250"/>
+    <img src="https://miro.medium.com/max/720/1*YjS4wUASqCh4TFEeEHKPpA.png" width="250"/>
+</p>
+
 
 ## Como clonar e importar
 
