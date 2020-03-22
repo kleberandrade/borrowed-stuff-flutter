@@ -1,4 +1,4 @@
-# Calculadora de Juros
+# Empréstimo de Objetos
 
 Aplicativo para lembrar dos objetos emprestados criado na disciplina de Programação Mobile, por Kleber de Oliveira Andrade.
 
