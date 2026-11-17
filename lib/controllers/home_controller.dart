@@ -1,27 +1,33 @@
-import 'package:borrowed_stuff/database/stuff_dao.dart';
-import 'package:borrowed_stuff/models/stuff.dart';
+import 'package:flutter/foundation.dart';
+import '../database/stuff_dao.dart';
+import '../models/stuff.dart';
 
-class HomeController {
-  final _stuffDao = StuffDao();
-  final stuffList = [];
+class HomeController extends ChangeNotifier {
+  final LoanRepository dao;
+  HomeController(this.dao);
+  List<Stuff> items = [];
+  bool busy = false;
+  String? error;
 
-  void create(Stuff stuff) {
-    _stuffDao.create(stuff);
-    stuffList.add(stuff);
+  Future<void> load() async {
+    await run(() async {});
   }
 
-  Future<void> readAll() async {
-    final list = await _stuffDao.readAll();
-    stuffList.addAll(list);
-  }
-
-  void update(int index, Stuff stuff) {
-    _stuffDao.update(stuff);
-    stuffList[index] = stuff;
-  }
-
-  void delete(Stuff stuff) {
-    _stuffDao.delete(stuff);
-    stuffList.remove(stuff);
+  Future<bool> run(Future<void> Function() operation) async {
+    if (busy) return false;
+    busy = true;
+    error = null;
+    notifyListeners();
+    try {
+      await operation();
+      items = await dao.readAll();
+      return true;
+    } catch (_) {
+      error = 'Não foi possível acessar os dados. Tente novamente.';
+      return false;
+    } finally {
+      busy = false;
+      notifyListeners();
+    }
   }
 }

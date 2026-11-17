@@ -1,32 +1,11 @@
-import 'dart:async';
-
+import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:sembast/sembast.dart';
 import 'package:sembast/sembast_io.dart';
-import 'package:path/path.dart';
+import 'package:sembast_web/sembast_web.dart';
 
-class AppDatabase {
-  static final AppDatabase _singleton = AppDatabase._();
-
-  static AppDatabase get instance => _singleton;
-
-  Completer<Database> _dbOpenCompleter;
-
-  AppDatabase._();
-
-  Future<Database> get database async {
-    if (_dbOpenCompleter == null) {
-      _dbOpenCompleter = Completer();
-      _openDatabase();
-    }
-
-    return _dbOpenCompleter.future;
-  }
-
-  Future _openDatabase() async {
-    final appDocumentDir = await getApplicationDocumentsDirectory();
-    final dbPath = join(appDocumentDir.path, 'borrowed_stuff.db');
-    final database = await databaseFactoryIo.openDatabase(dbPath);
-    _dbOpenCompleter.complete(database);
-  }
+Future<Database> openAppDatabase() async {
+  if (kIsWeb) return databaseFactoryWeb.openDatabase('borrowed_stuff.db');
+  final dir = await getApplicationDocumentsDirectory();
+  return databaseFactoryIo.openDatabase(p.join(dir.path, 'borrowed_stuff.db'));
 }

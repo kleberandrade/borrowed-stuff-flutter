@@ -1,90 +1,80 @@
-import 'dart:convert';
-
+/// A loan uses local calendar dates, never UTC instants for display.
 class Stuff {
-  int id;
-  String description;
-  String contactName;
-  DateTime loanDate;
-  String photoPath;
+  final int? id;
+  final String description;
+  final String contactName;
+  final DateTime loanDate;
+  final String? photoPath;
+  final String? photoBase64;
+  final String phone;
+  final bool returned;
 
   Stuff({
     this.id,
-    this.description,
-    this.contactName,
-    this.loanDate,
+    required String description,
+    required String contactName,
+    required DateTime loanDate,
     this.photoPath,
-  });
-
-  String get loadDateString =>
-      '${loanDate.day.toString().padLeft(2, '0')}/${loanDate.month.toString().padLeft(2, '0')}';
-
-  bool get photoExist => photoPath != null && photoPath.isNotEmpty;
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'description': description,
-      'contactName': contactName,
-      'loanDate': loanDate.millisecondsSinceEpoch,
-      'photoPath': photoPath,
-    };
+    this.photoBase64,
+    this.phone = '',
+    this.returned = false,
+    bool validate = true,
+  }) : description = description.trim(),
+       contactName = contactName.trim(),
+       loanDate = DateTime(loanDate.year, loanDate.month, loanDate.day) {
+    if (validate) {
+      if (this.description.isEmpty || this.contactName.isEmpty) {
+        throw ArgumentError('Objeto e pessoa são obrigatórios.');
+      }
+      if (this.loanDate.isAfter(DateTime.now())) {
+        throw ArgumentError('A data não pode estar no futuro.');
+      }
+      if (phone.isNotEmpty && !validPhone(phone)) {
+        throw ArgumentError('Informe um telefone válido.');
+      }
+    }
   }
 
-  static Stuff fromMap(Map<String, dynamic> map) {
-    if (map == null) return null;
+  static bool validPhone(String value) {
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    return RegExp(r'^\+?[\d ()-]{8,20}$').hasMatch(value) &&
+        digits.length >= 8 &&
+        digits.length <= 15;
+  }
 
+  factory Stuff.fromMap(Map<String, Object?> map, {required int id}) {
+    final calendar = map['calendarDate'] as String?;
     return Stuff(
-      id: map['id'],
-      description: map['description'],
-      contactName: map['contactName'],
-      loanDate: DateTime.fromMillisecondsSinceEpoch(map['loanDate']),
-      photoPath: map['photoPath'],
+      id: id,
+      description: map['description'] as String,
+      contactName: map['contactName'] as String,
+      loanDate: calendar == null
+          ? DateTime.fromMillisecondsSinceEpoch(map['loanDate'] as int)
+          : DateTime.parse(calendar),
+      photoPath: map['photoPath'] as String?,
+      photoBase64: map['photoBase64'] as String?,
+      phone: map['phone'] as String? ?? '',
+      returned: map['returned'] as bool? ?? false,
+      // Legacy records may contain dates or empty fields accepted by the old app.
+      validate: false,
     );
   }
 
-  String toJson() => json.encode(toMap());
+  Map<String, Object?> toMap() => {
+    'id': id,
+    'description': description,
+    'contactName': contactName,
+    'loanDate': loanDate.millisecondsSinceEpoch,
+    'calendarDate':
+        '${loanDate.year.toString().padLeft(4, '0')}-${loanDate.month.toString().padLeft(2, '0')}-${loanDate.day.toString().padLeft(2, '0')}',
+    'photoPath': photoPath,
+    'photoBase64': photoBase64,
+    'phone': phone,
+    'returned': returned,
+    'schemaVersion': 2,
+  };
 
-  static Stuff fromJson(String source) => fromMap(json.decode(source));
-
-  Stuff copyWith({
-    int id,
-    String description,
-    String contactName,
-    DateTime loanDate,
-    String photoPath,
-  }) {
-    return Stuff(
-      id: id ?? this.id,
-      description: description ?? this.description,
-      contactName: contactName ?? this.contactName,
-      loanDate: loanDate ?? this.loanDate,
-      photoPath: photoPath ?? this.photoPath,
-    );
-  }
-
-  @override
-  String toString() {
-    return 'Stuff(id: $id, description: $description, contactName: $contactName, loanDate: $loanDate, photoPath: $photoPath)';
-  }
-
-  @override
-  bool operator ==(Object o) {
-    if (identical(this, o)) return true;
-  
-    return o is Stuff &&
-      o.id == id &&
-      o.description == description &&
-      o.contactName == contactName &&
-      o.loanDate == loanDate &&
-      o.photoPath == photoPath;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-      description.hashCode ^
-      contactName.hashCode ^
-      loanDate.hashCode ^
-      photoPath.hashCode;
-  }
+  Stuff withIdentity(int key) => Stuff.fromMap(toMap(), id: key);
+  Stuff withReturned(bool value) =>
+      Stuff.fromMap({...toMap(), 'returned': value}, id: id!);
 }

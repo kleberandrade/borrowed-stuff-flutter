@@ -1,30 +1,63 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility that Flutter provides. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:borrowed_stuff/main.dart';
+import 'package:borrowed_stuff/controllers/home_controller.dart';
+import 'package:borrowed_stuff/database/stuff_dao.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:borrowed_stuff/main.dart';
+import 'package:borrowed_stuff/models/stuff.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(MyApp());
+  testWidgets(
+    'empty state, validation, create, return and persistence at mobile width',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final dao = _MemoryLoans();
+      await tester.pumpWidget(MyApp(controller: HomeController(dao)));
+      await tester.pumpAndSettle();
+      expect(find.text('Seu próximo empréstimo começa aqui'), findsOneWidget);
+      await tester.tap(find.text('Novo empréstimo'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Salvar empréstimo'));
+      await tester.tap(find.text('Salvar empréstimo'));
+      await tester.pumpAndSettle();
+      expect(find.text('Campo obrigatório'), findsNWidgets(2));
+      await tester.enterText(
+        find.byType(TextFormField).at(0),
+        'Livro de teste',
+      );
+      await tester.enterText(find.byType(TextFormField).at(1), 'Ana');
+      await tester.ensureVisible(find.text('Salvar empréstimo'));
+      await tester.tap(find.text('Salvar empréstimo'));
+      await tester.pumpAndSettle();
+      expect((await dao.readAll()).single.description, 'Livro de teste');
+      await tester.ensureVisible(find.text('Marcar devolução'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Marcar devolução'));
+      await tester.pumpAndSettle();
+      expect((await dao.readAll()).single.returned, true);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+}
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+class _MemoryLoans implements LoanRepository {
+  final List<Stuff> items = [];
+  @override
+  Future<List<Stuff>> readAll() async => List.of(items);
+  @override
+  Future<Stuff> save(Stuff item) async {
+    final saved = item.id == null ? item.withIdentity(items.length + 1) : item;
+    items.removeWhere((i) => i.id == saved.id);
+    items.add(saved);
+    return saved;
+  }
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
-  });
+  @override
+  Future<void> delete(Stuff item) async =>
+      items.removeWhere((i) => i.id == item.id);
+  @override
+  Future<void> addDemo() async {}
 }

@@ -1,36 +1,59 @@
-import 'package:borrowed_stuff/models/stuff.dart';
 import 'package:sembast/sembast.dart';
+import '../models/stuff.dart';
 
-import 'app_database.dart';
+abstract interface class LoanRepository {
+  Future<Stuff> save(Stuff item);
+  Future<void> delete(Stuff item);
+  Future<List<Stuff>> readAll();
+  Future<void> addDemo();
+}
 
-class StuffDao {
-  static const String folderName = "Stuff";
-  final _stuffFolder = intMapStoreFactory.store(folderName);
+class StuffDao implements LoanRepository {
+  final Database database;
+  final store = intMapStoreFactory.store('Stuff');
+  StuffDao(this.database);
 
-  Future<Database> get _db async => await AppDatabase.instance.database;
-
-  Future create(Stuff stuff) async {
-    stuff.id = await _stuffFolder.add(await _db, stuff.toMap());  
-
-    final finder = Finder(filter: Filter.equals('description', stuff.description));
-    await _stuffFolder.update(await _db, stuff.toMap(), finder: finder);
+  @override
+  Future<Stuff> save(Stuff item) async {
+    if (item.id == null) {
+      final key = await store.add(database, item.toMap());
+      return item.withIdentity(key);
+    }
+    await store.record(item.id!).put(database, item.toMap());
+    return item;
   }
 
-  Future update(Stuff stuff) async {
-    final finder = Finder(filter: Filter.byKey(stuff.id));
-    await _stuffFolder.update(await _db, stuff.toMap(), finder: finder);
+  @override
+  Future<void> delete(Stuff item) async {
+    await store.record(item.id!).delete(database);
   }
 
-  Future delete(Stuff stuff) async {
-    final finder = Finder(filter: Filter.byKey(stuff.id));
-    await _stuffFolder.delete(await _db, finder: finder);
-  }
-
+  @override
   Future<List<Stuff>> readAll() async {
-    final recordSnapshot = await _stuffFolder.find(await _db);
-    return recordSnapshot.map((snapshot) {
-      final student = Stuff.fromMap(snapshot.value);
-      return student;
-    }).toList();
+    final records = await store.find(database);
+    final items = records
+        .map((r) => Stuff.fromMap(r.value, id: r.key))
+        .toList();
+    items.sort((a, b) => b.loanDate.compareTo(a.loanDate));
+    return items;
+  }
+
+  @override
+  Future<void> addDemo() async {
+    await database.transaction((txn) async {
+      if (await store.count(txn) != 0) return;
+      for (final entry in [
+        ('O Hobbit', 'Marina Costa', 3),
+        ('Câmera instantânea', 'Lucas Santos', 7),
+        ('Furadeira', 'Rafael Lima', 12),
+      ]) {
+        final item = Stuff(
+          description: entry.$1,
+          contactName: entry.$2,
+          loanDate: DateTime.now().subtract(Duration(days: entry.$3)),
+        );
+        await store.add(txn, item.toMap());
+      }
+    });
   }
 }

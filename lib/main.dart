@@ -1,41 +1,78 @@
-import 'package:borrowed_stuff/pages/home_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'controllers/home_controller.dart';
+import 'database/app_database.dart';
+import 'database/stuff_dao.dart';
+import 'pages/home_page.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
+  final HomeController? controller;
+  const MyApp({super.key, this.controller});
   @override
-  Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-    ]);
+  Widget build(BuildContext context) => MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: 'Emprestei?',
+    locale: const Locale('pt', 'BR'),
+    localizationsDelegates: GlobalMaterialLocalizations.delegates,
+    supportedLocales: const [Locale('pt', 'BR')],
+    theme: ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff285c4b)),
+      scaffoldBackgroundColor: const Color(0xfff6f5f0),
+      inputDecorationTheme: const InputDecorationTheme(
+        border: OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.white,
+      ),
+      appBarTheme: const AppBarTheme(backgroundColor: Color(0xfff6f5f0)),
+    ),
+    home: controller == null
+        ? const _Bootstrap()
+        : HomePage(controller: controller!),
+  );
+}
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Emprestei?',
-      theme: _buildTheme(),
-      home: HomePage(),
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: [
-        const Locale('pt', 'BR'),
-        const Locale('en', 'US'),
-      ],
-    );
+class _Bootstrap extends StatefulWidget {
+  const _Bootstrap();
+  @override
+  State<_Bootstrap> createState() => _BootstrapState();
+}
+
+class _BootstrapState extends State<_Bootstrap> {
+  late Future<HomeController> future;
+  @override
+  void initState() {
+    super.initState();
+    future = open();
   }
 
-  // Ciando um tema para o projeto
-  _buildTheme() {
-    return ThemeData(
-      brightness: Brightness.dark,
-      primaryColor: Color(0xFF212121),
-      accentColor: Colors.deepOrange,
-      primarySwatch: Colors.deepOrange,
-    );
-  }
+  Future<HomeController> open() async =>
+      HomeController(StuffDao(await openAppDatabase()));
+  @override
+  Widget build(BuildContext context) => FutureBuilder<HomeController>(
+    future: future,
+    builder: (context, snapshot) {
+      if (snapshot.hasData) return HomePage(controller: snapshot.data!);
+      return Scaffold(
+        body: Center(
+          child: snapshot.hasError
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Não foi possível abrir o diário.'),
+                    FilledButton(
+                      onPressed: () => setState(() {
+                        future = open();
+                      }),
+                      child: const Text('Tentar novamente'),
+                    ),
+                  ],
+                )
+              : const CircularProgressIndicator(),
+        ),
+      );
+    },
+  );
 }
