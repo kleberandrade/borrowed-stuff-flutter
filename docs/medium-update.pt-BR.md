@@ -117,25 +117,25 @@ Veja o campo de objeto em lib/pages/stuff_detail_page.dart. Este trecho pertence
 
 ```dart
 TextFormField(
-                  controller: description,
-                  enabled: !saving,
-                  maxLength: 120,
-                  textCapitalization: TextCapitalization.sentences,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Objeto',
-                    hintText: 'Ex.: livro O Hobbit',
-                    prefixIcon: Icon(Icons.inventory_2_outlined),
-                  ),
-                  validator: requiredText,
-                )
+  controller: description,
+  enabled: !saving,
+  maxLength: 120,
+  textCapitalization: TextCapitalization.sentences,
+  textInputAction: TextInputAction.next,
+  decoration: const InputDecoration(
+    labelText: 'Objeto',
+    hintText: 'Ex.: livro O Hobbit',
+    prefixIcon: Icon(Icons.inventory_2_outlined),
+  ),
+  validator: requiredText,
+)
 ```
 
 O controller do campo mantém o texto digitado. maxLength limita a digitação na interface; enabled impede alterar o campo durante a gravação; validator decide se a entrada pode prosseguir. A função usada pelos campos obrigatórios é:
 
 ```dart
 String? requiredText(String? value) =>
-      value == null || value.trim().isEmpty ? 'Campo obrigatório' : null;
+  value == null || value.trim().isEmpty ? 'Campo obrigatório' : null;
 ```
 
 Em um validator do Flutter, retornar null significa “válido”; retornar uma String mostra essa mensagem como erro. No método save, form.currentState!.validate() executa os validadores. Se algum campo falhar, a função retorna antes de criar o Stuff ou chamar o repositório.
@@ -222,25 +222,25 @@ A Figura 7 acompanha este método real de HomeController. Os comentários explic
 
 ```dart
 Future<bool> run(Future<void> Function() operation) async {
-    // Não inicia outra operação enquanto esta ainda está em andamento.
-    if (busy) return false;
-    busy = true;
-    error = null;
+  // Não inicia outra operação enquanto esta ainda está em andamento.
+  if (busy) return false;
+  busy = true;
+  error = null;
+  notifyListeners();
+  try {
+    // Aguarda a gravação/exclusão antes de reler os dados.
+    await operation();
+    items = await dao.readAll();
+    return true;
+  } catch (_) {
+    error = 'Não foi possível acessar os dados. Tente novamente.';
+    return false;
+  } finally {
+    // Libera o estado de espera tanto no sucesso quanto na falha.
+    busy = false;
     notifyListeners();
-    try {
-      // Aguarda a gravação/exclusão antes de reler os dados.
-      await operation();
-      items = await dao.readAll();
-      return true;
-    } catch (_) {
-      error = 'Não foi possível acessar os dados. Tente novamente.';
-      return false;
-    } finally {
-      // Libera o estado de espera tanto no sucesso quanto na falha.
-      busy = false;
-      notifyListeners();
-    }
   }
+}
 ```
 
 A operação recebida é uma função que devolve Future<void>. No cadastro, a tela entrega uma função que chama dao.save(item). O primeiro notifyListeners avisa sobre o carregamento. A atribuição de items só acontece quando readAll termina. No catch, a mensagem fica disponível e run retorna false; o finally libera busy e notifica novamente. A tela usa o retorno bool para saber se pode sair do formulário.
