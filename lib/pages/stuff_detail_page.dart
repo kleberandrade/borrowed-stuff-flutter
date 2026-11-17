@@ -1,7 +1,9 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+
+import 'package:material_ui/material_ui.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+
 import '../controllers/home_controller.dart';
 import '../models/stuff.dart';
 import '../components/loan_photo.dart';
@@ -175,9 +177,8 @@ class _StuffDetailPageState extends State<StuffDetailPage> {
               children: [
                 Text(
                   'O que vai circular?',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.headlineMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 const Text('Guarde os detalhes para lembrar depois.'),

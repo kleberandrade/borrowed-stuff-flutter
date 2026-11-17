@@ -38,3 +38,5 @@
 coverage/
 .metrics/
 ios/Flutter/ephemeral/
+
+android/build/

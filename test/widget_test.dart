@@ -1,7 +1,7 @@
 import 'package:borrowed_stuff/main.dart';
 import 'package:borrowed_stuff/controllers/home_controller.dart';
 import 'package:borrowed_stuff/database/stuff_dao.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:borrowed_stuff/models/stuff.dart';
 

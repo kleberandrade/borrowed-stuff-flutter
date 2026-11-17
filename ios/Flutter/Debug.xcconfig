@@ -1,5 +1,1 @@
-#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "Generated.xcconfig"
-// Xcode 27 lipo rejects multi-architecture verify calls in Flutter 3.41.
-// Build the debug simulator for the host architecture; device releases are unaffected.
-ARCHS[sdk=iphonesimulator*] = $(NATIVE_ARCH_ACTUAL)

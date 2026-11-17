@@ -1,4 +1,5 @@
 import 'package:sembast/sembast.dart';
+
 import '../models/stuff.dart';
 
 abstract interface class LoanRepository {

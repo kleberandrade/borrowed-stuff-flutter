@@ -36,20 +36,17 @@ void main() {
       throwsArgumentError,
     );
   });
-  test(
-    'reads legacy milliseconds and preserves photo path without timezone shifting',
-    () {
-      final date = DateTime(2020, 3, 12, 18);
-      final item = Stuff.fromMap({
-        'description': 'Livro',
-        'contactName': 'Ana',
-        'loanDate': date.millisecondsSinceEpoch,
-        'photoPath': '/old/photo.jpg',
-      }, id: 7);
-      expect(item.id, 7);
-      expect(item.loanDate, DateTime(2020, 3, 12));
-      expect(item.photoPath, '/old/photo.jpg');
-      expect(Stuff.fromMap(item.toMap(), id: 7).loanDate, item.loanDate);
-    },
-  );
+  test('reads legacy milliseconds and preserves photo path without timezone shifting', () {
+    final date = DateTime(2020, 3, 12, 18);
+    final item = Stuff.fromMap({
+      'description': 'Livro',
+      'contactName': 'Ana',
+      'loanDate': date.millisecondsSinceEpoch,
+      'photoPath': '/old/photo.jpg',
+    }, id: 7);
+    expect(item.id, 7);
+    expect(item.loanDate, DateTime(2020, 3, 12));
+    expect(item.photoPath, '/old/photo.jpg');
+    expect(Stuff.fromMap(item.toMap(), id: 7).loanDate, item.loanDate);
+  });
 }

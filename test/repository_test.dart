@@ -24,35 +24,28 @@ void main() {
     );
     await db.close();
   });
-  test(
-    'legacy keys override corrupt embedded ids; duplicate descriptions stay independent',
-    () async {
-      final db = await newDatabaseFactoryMemory().openDatabase('legacy');
-      final store = intMapStoreFactory.store('Stuff');
-      await store.record(4).put(db, {
-        'id': 99,
-        'description': 'Livro',
-        'contactName': 'Ana',
-        'loanDate': DateTime(2020).millisecondsSinceEpoch,
-        'photoPath': '/old.jpg',
-      });
-      final dao = StuffDao(db);
-      final old = (await dao.readAll()).single;
-      expect(old.id, 4);
-      final other = await dao.save(
-        Stuff(
-          description: 'Livro',
-          contactName: 'Bia',
-          loanDate: DateTime(2021),
-        ),
-      );
-      await dao.save(old.withReturned(true));
-      expect((await dao.readAll()).length, 2);
-      expect((await store.record(4).get(db))!['photoPath'], '/old.jpg');
-      expect((await store.record(4).get(db))!['schemaVersion'], 2);
-      await dao.delete(other);
-      expect((await dao.readAll()).single.returned, true);
-      await db.close();
-    },
-  );
+  test('legacy keys override corrupt embedded ids; duplicate descriptions stay independent', () async {
+    final db = await newDatabaseFactoryMemory().openDatabase('legacy');
+    final store = intMapStoreFactory.store('Stuff');
+    await store.record(4).put(db, {
+      'id': 99,
+      'description': 'Livro',
+      'contactName': 'Ana',
+      'loanDate': DateTime(2020).millisecondsSinceEpoch,
+      'photoPath': '/old.jpg',
+    });
+    final dao = StuffDao(db);
+    final old = (await dao.readAll()).single;
+    expect(old.id, 4);
+    final other = await dao.save(
+      Stuff(description: 'Livro', contactName: 'Bia', loanDate: DateTime(2021)),
+    );
+    await dao.save(old.withReturned(true));
+    expect((await dao.readAll()).length, 2);
+    expect((await store.record(4).get(db))!['photoPath'], '/old.jpg');
+    expect((await store.record(4).get(db))!['schemaVersion'], 2);
+    await dao.delete(other);
+    expect((await dao.readAll()).single.returned, true);
+    await db.close();
+  });
 }

@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
+
 import '../controllers/home_controller.dart';
 import '../models/stuff.dart';
 import '../components/loan_photo.dart';
