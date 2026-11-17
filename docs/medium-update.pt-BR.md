@@ -2,13 +2,23 @@
 
 ## Notas de aula do professor Kleber de Oliveira Andrade
 
-Atualização de 17/11/2026: esta edição acompanha a modernização do projeto para Flutter 3.41.9 e Dart 3.11.5, com null safety, Material 3 e execução Web. O objetivo da aula continua o mesmo: lembrar o que emprestamos, para quem e em qual data, mantendo os dados localmente. A URL e a autoria do artigo são preservadas.
+Você emprestou um livro para uma amiga. Algumas semanas depois, lembra do livro, mas não sabe se ele já voltou. Esse pequeno problema será o ponto de partida da nossa aula: construir o Emprestei?, um diário local de objetos emprestados.
 
-Vamos criar um diário de empréstimos que permite cadastrar e editar objetos, guardar a pessoa e uma foto opcional, marcar devoluções e excluir registros com confirmação. Na tela inicial podemos buscar pelo objeto ou pela pessoa e alternar entre emprestados e devolvidos.
+Vamos acompanhar o caminho completo de um empréstimo: preencher o formulário, validar os dados, gravar no banco, exibir na tela e registrar a devolução. Também veremos como atualizar um aplicativo sem perder os registros de quem já usava a versão anterior.
 
-### Preparando e executando o projeto
+Edição atualizada em 17/11/2026: Flutter 3.50.0, Dart 3.14.0 e pacotes atuais compatíveis. A capa foi criada especialmente para esta aula com auxílio de IA; ela é uma ilustração, não uma captura do aplicativo. As telas reais e o código estão no repositório.
 
-Para acompanhar a versão atual, instale Flutter 3.41.9, que inclui Dart 3.11.5, e tenha o Chrome disponível. Confira a versão e o diagnóstico da instalação com os comandos abaixo. Não use o antigo requisito de Dart 2 desta aula. O aplicativo não precisa de Firebase, servidor ou chave de API.
+### Antes de começar: o que você precisa saber
+
+Tenha uma noção de variáveis, classes, construtores e widgets em Dart/Flutter. Se Future e async/await ainda forem novidade, pense assim: uma operação de banco pode levar algum tempo; await permite aguardar o resultado antes de continuar, sem bloquear a interface durante essa espera.
+
+O objetivo é entender e experimentar o projeto completo. Os trechos abaixo destacam as decisões principais; não são um aplicativo inteiro para colar em um único arquivo. Abra os arquivos indicados em cada etapa e mantenha os imports correspondentes. Você não precisa de Firebase, conta em serviço externo ou chave de API.
+
+Ao terminar a aula, você deverá conseguir explicar a diferença entre modelo, tela, controller e repositório; executar um CRUD no Sembast; distinguir a chave de um registro do seu conteúdo; e verificar a persistência fechando e reabrindo o aplicativo.
+
+### Etapa 1 — Execute o app e observe o comportamento
+
+Use Flutter 3.50.0, que inclui Dart 3.14.0, e tenha o Chrome instalado. O arquivo .flutter-version registra a versão adotada pelo projeto. Se você usa outros projetos com uma versão anterior, mantenha uma instalação separada para esta aula: não é necessário substituir o SDK usado por eles.
 
 ```sh
 flutter --version
@@ -19,11 +29,15 @@ flutter pub get
 flutter run -d chrome --web-port 8767
 ```
 
-Mantenha o mesmo endereço e porta para encontrar o mesmo banco no navegador. O armazenamento Web pertence à origem do site. Na primeira execução, o botão “Experimentar com exemplos locais” cria três registros fictícios. A operação só insere exemplos quando a coleção está vazia e não substitui dados existentes.
+Confira a versão informada pelo primeiro comando antes de continuar. O projeto agora exige Dart 3.14 ou superior e Flutter 3.50 ou superior. Se a resolução das dependências falhar com um SDK antigo, corrija a versão selecionada; apagar o lockfile não resolve um requisito de SDK.
 
-### Dependências atuais
+Na primeira abertura, escolha “Experimentar com exemplos locais”. O app cria três empréstimos fictícios apenas quando o diário está vazio. Busque pelo nome de uma pessoa, marque uma devolução e abra o filtro “Devolvidos”. Recarregue a página: o registro deve continuar lá.
 
-O pubspec.yaml do repositório é a referência. Estas são as dependências da edição atual; o pubspec.lock registra as versões resolvidas e deve ser mantido no aplicativo.
+Por que fixamos a porta 8767? O banco do navegador pertence à origem, isto é, à combinação de protocolo, endereço e porta. Abrir em outra porta pode mostrar um diário vazio, porque é outro espaço de armazenamento. Isso não significa que o banco anterior foi apagado.
+
+### Etapa 2 — Entenda os pacotes e a separação de responsabilidades
+
+O pubspec.yaml declara as dependências permitidas. O pubspec.lock registra as versões efetivamente resolvidas. Em um aplicativo, mantenha ambos no controle de versão para que outras pessoas e o CI consigam reproduzir a instalação.
 
 ```yaml
 name: borrowed_stuff
@@ -32,21 +46,20 @@ publish_to: none
 version: 2.0.0+2
 
 environment:
-  sdk: '>=3.11.0 <4.0.0'
-  flutter: '>=3.41.0'
+  sdk: '>=3.14.0 <4.0.0'
+  flutter: '>=3.50.0'
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_localizations:
-    sdk: flutter
-  intl: ^0.20.2
+  intl: ^0.20.3
   image_picker: ^1.2.4
   path: ^1.9.1
-  path_provider: ^2.1.5
-  sembast: ^3.8.5
-  sembast_web: 2.4.4+1
-  cupertino_icons: ^1.0.8
+  path_provider: ^2.1.6
+  sembast: ^3.10.1
+  sembast_web: ^2.4.7
+  cupertino_icons: ^2.0.0
+  material_ui: ^1.11.1
 
 dev_dependencies:
   flutter_test:
@@ -55,22 +68,25 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
 ```
 
-O Sembast Web está fixado em 2.4.4+1: versões mais novas exigem Dart 3.12. Não é necessário trocar o SDK compartilhado para executar esta edição. Flushbar, flutter_slidable e datetime_picker_formfield foram removidos. Usamos os componentes atuais do Flutter: botões, menus, showDatePicker, indicadores de progresso e diálogos Material.
+Sembast cuida dos registros locais. Sembast Web oferece a mesma API sobre IndexedDB. path_provider localiza a pasta de documentos nas plataformas nativas, e path monta o caminho do arquivo. image_picker seleciona a foto. intl apresenta datas no formato esperado. flutter_test e flutter_lints ajudam a testar e analisar o código.
 
-### Separando responsabilidades
+Nesta versão do Flutter, os componentes Material vêm do pacote oficial material_ui. Por isso, os arquivos de interface importam package:material_ui/material_ui.dart, em vez do antigo package:flutter/material.dart. As traduções Material também vêm desse pacote; a configuração usada no app é GlobalMaterialLocalizations.delegates. Essa migração mantém o projeto em Flutter.
 
-Continuamos com modelo, acesso a dados, controller e telas, mas as dependências agora são explícitas. Stuff representa um empréstimo; StuffDao implementa LoanRepository; HomeController recebe esse repositório, espera a gravação terminar e só então atualiza a lista. HomePage apresenta o diário e StuffDetailPage apresenta o formulário.
+Todos os pacotes diretos e de desenvolvimento estão nas versões estáveis atuais resolvíveis com esse SDK. Três dependências transitivas continuam abaixo da versão mais recente publicada: cross_file é limitado pelos pacotes de seleção de imagem; material_color_utilities e test_api têm versões fixadas pelo próprio Flutter. Não usamos dependency_overrides para forçar combinações que os mantenedores não declararam compatíveis.
 
-A estrutura atual está em lib/models, lib/database, lib/controllers, lib/pages e lib/components. O arquivo do formulário chama-se lib/pages/stuff_detail_page.dart, corrigindo a grafia antiga. O código completo de cada etapa está no repositório, em vez de depender dos antigos Gists da versão Dart 2.
+Agora abra lib e siga esta divisão. Em models, Stuff descreve um empréstimo. Em database, a abertura do banco e o DAO cuidam da persistência. Em controllers, HomeController coordena as operações e o estado. Em pages, as telas apresentam os dados e recebem as ações. Em components, fica a exibição de fotos.
 
-Referência conceitual preservada da aula original: vídeo “MVC // Dicionário do Programador”, do Código Fonte TV: https://www.youtube.com/watch?v=jyTNhT67ZyY. O vídeo é de terceiros e não foi modificado.
+Uma forma de seguir o fluxo é: botão Salvar → formulário validado → Stuff → HomeController → LoanRepository/StuffDao → Sembast → lista atualizada. A tela não precisa conhecer o formato físico do arquivo. O modelo não precisa saber qual botão foi pressionado.
 
-### Modelo, validação e datas
+Referência conceitual da aula original: vídeo “MVC // Dicionário do Programador”, do Código Fonte TV: https://www.youtube.com/watch?v=jyTNhT67ZyY . O vídeo é de terceiros e não foi modificado.
 
-A classe Stuff tem campos finais: id opcional, description, contactName, loanDate, phone opcional, photoPath legado, photoBase64 e returned. Um registro novo exige descrição e pessoa com conteúdo após trim; sua data não pode estar no futuro. O telefone é opcional, mas, quando preenchido, deve ter de 8 a 15 dígitos e apenas a pontuação permitida. A interface valida antes de salvar e o modelo também protege a entrada.
+### Etapa 3 — Modele um empréstimo válido
+
+Abra lib/models/stuff.dart. Os campos principais são description, contactName e loanDate. O id começa nulo porque a chave ainda será criada pelo banco. phone, photoPath e photoBase64 são opcionais; returned informa se o objeto já foi devolvido.
+
+Os dados são imutáveis: os campos são final. Para mudar uma situação, criamos outra representação e a gravamos na mesma chave. Isso evita alterar um objeto silenciosamente enquanto a tela ainda exibe um estado anterior.
 
 ```dart
 final item = Stuff(
@@ -81,15 +97,19 @@ final item = Stuff(
 );
 ```
 
-No exemplo, escolha uma data igual ou anterior ao dia em que você executar o código. loanDate é uma data de calendário local. A serialização mantém o campo loanDate em milissegundos por compatibilidade e acrescenta calendarDate no formato YYYY-MM-DD. Assim, as novas gravações não mudam de dia quando lidas em outro fuso horário.
+Escolha uma data igual ou anterior ao dia em que executar o exemplo. O construtor remove espaços nas extremidades dos nomes, rejeita descrição ou pessoa vazia e impede uma data futura. O telefone é opcional; quando preenchido, precisa conter de 8 a 15 dígitos e apenas a pontuação permitida. Uma sequência como “--------” não é um telefone válido.
 
-O formato antigo só contém um instante em milissegundos; ele é interpretado no fuso do dispositivo, como antes. Não há informação suficiente para reconstruir o fuso original de um registro antigo. Registros legados com campos vazios ou datas futuras continuam legíveis; ao editar, corrija os dados para atender às validações atuais.
+Há duas camadas de validação com funções diferentes. O TextFormField mostra uma mensagem perto do campo para orientar a pessoa. O modelo protege a regra quando o dado vem de outro caminho, como um teste ou uma futura importação. Não confie apenas no teclado ou no aspecto visual do formulário.
 
-Código completo do modelo: https://github.com/kleberandrade/borrowed-stuff-flutter/blob/master/lib/models/stuff.dart
+Stuff.fromMap é a fronteira de leitura do armazenamento. Ela também aceita dados legados que o app antigo permitia, como campos vazios ou datas futuras. Isso evita tornar um empréstimo antigo inacessível depois da atualização. Ao editar, a pessoa deve corrigir os campos para atender às regras atuais.
 
-### Abrindo o Sembast no dispositivo e na Web
+Código completo: https://github.com/kleberandrade/borrowed-stuff-flutter/blob/master/lib/models/stuff.dart
 
-Mantemos borrowed_stuff.db no diretório de documentos do aplicativo nas plataformas nativas. No navegador usamos databaseFactoryWeb, que persiste em IndexedDB. Não tente abrir um caminho de arquivo nativo no Chrome. A função atual de abertura é:
+### Etapa 4 — Abra o banco correto em cada plataforma
+
+No Sembast, uma coleção é chamada store. Dentro dela, cada registro tem uma chave e um valor. Neste projeto, a store chama-se Stuff, as chaves são inteiras e os valores são mapas com os campos do empréstimo.
+
+Nas plataformas nativas, o banco é o arquivo borrowed_stuff.db dentro da pasta de documentos do aplicativo. No navegador, não há acesso a esse caminho nativo: databaseFactoryWeb usa IndexedDB. Observe a função em lib/database/app_database.dart:
 
 ```dart
 import 'package:flutter/foundation.dart';
@@ -105,36 +125,59 @@ Future<Database> openAppDatabase() async {
 }
 ```
 
-A abertura acontece no início do app. A conexão é injetada no DAO e o controller é entregue às telas. Isso substitui o Completer global da primeira edição e permite testar o repositório com um banco separado. Se a abertura falhar, a interface oferece uma nova tentativa em vez de deixar um indicador girando indefinidamente.
+kIsWeb seleciona a implementação. O restante do código usa a API Sembast sem precisar repetir essa escolha em cada operação. A abertura acontece no início do app; a conexão é entregue ao DAO, que é entregue ao controller.
 
-### Identidade dos registros e CRUD
+Uma conexão que falha deve produzir um estado de erro com nova tentativa. Não basta esconder o erro atrás de um indicador de carregamento que nunca termina. Esse cuidado aparece no bootstrap do app, em lib/main.dart.
 
-A coleção continua chamada Stuff e usa chaves inteiras. O identificador confiável é snapshot.key, não o campo id contido no mapa. A primeira edição fazia uma atualização filtrada pela descrição após inserir: dois objetos com a mesma descrição podiam receber o mesmo id no conteúdo. Agora cada registro mantém sua própria chave.
+### Etapa 5 — Grave, leia, atualize e exclua pela chave
+
+Abra lib/database/stuff_dao.dart. LoanRepository descreve as operações que a aplicação precisa. StuffDao implementa esse contrato usando Sembast. Nos testes de interface podemos fornecer outro repositório, sem depender de um arquivo real.
+
+Veja o método de gravação:
 
 ```dart
-final dao = StuffDao(database);
-final saved = await dao.save(item);
-final loans = await dao.readAll();
-await dao.save(saved.withReturned(true));
-// Para excluir um registro, depois da confirmação na interface:
-await dao.delete(saved);
+  Future<Stuff> save(Stuff item) async {
+    if (item.id == null) {
+      final key = await store.add(database, item.toMap());
+      return item.withIdentity(key);
+    }
+    await store.record(item.id!).put(database, item.toMap());
+    return item;
+  }
+
 ```
 
-As chamadas acima são um exemplo sequencial dentro de uma função async; database deve ser a conexão obtida com openAppDatabase. save devolve o objeto com sua chave após a inserção. A devolução atualiza a mesma chave; não apaga o empréstimo. O filtro Devolvidos permite consultar o histórico e emprestar novamente. A exclusão definitiva só acontece após confirmação.
+Se id é nulo, add cria uma chave e devolvemos um Stuff com essa identidade. Se a chave já existe, put atualiza o registro correspondente. Durante a leitura, usamos a chave do snapshot como identificador confiável.
 
-Código completo: https://github.com/kleberandrade/borrowed-stuff-flutter/blob/master/lib/database/stuff_dao.dart
+Por que não localizar um registro pela descrição? Porque duas pessoas podem receber objetos com o mesmo nome. Dois registros “Livro” precisam continuar independentes. A descrição é conteúdo; a chave é identidade. A versão antiga podia gravar ids incorretos ao atualizar pela descrição, e essa situação está coberta pelos testes de compatibilidade.
 
-### Compatibilidade com o aplicativo antigo
+Para marcar a devolução de um empréstimo que já foi salvo, a operação principal é:
 
-Faça uma cópia do arquivo borrowed_stuff.db e das fotos referenciadas antes de atualizar uma instalação antiga. Preserve o identificador do app e não desinstale a versão anterior primeiro. O projeto preserva o identificador, o nome do arquivo, a coleção e as chaves.
+```dart
+await dao.save(saved.withReturned(true));
+```
 
-A leitura dos mapas antigos não regrava os dados ao iniciar. Ao editar, o registro recebe schemaVersion 2 e os campos adicionais; photoPath é mantido se a pessoa não remover ou substituir a foto. A chave real do banco prevalece sobre um id antigo incorreto. Campos novos ausentes assumem valores vazios ou false. Há teste que cria dados no formato antigo, fecha o arquivo, abre, atualiza e abre novamente, conferindo chave, data, foto e devolução.
+Aqui, dao é o repositório conectado e saved é o Stuff devolvido por uma gravação anterior. O trecho deve estar dentro de uma função async. O registro permanece no banco e aparece no filtro “Devolvidos”. Marcar uma devolução não equivale a excluir o histórico.
 
-Os dados nativos não são importados automaticamente para a Web. Cada navegador/origem tem seu diário. Limpar os dados do site apaga esse diário. Não há sincronização, exportação ou criptografia adicionada nesta edição.
+A exclusão usa dao.delete com a chave do item selecionado e exige confirmação na interface. Para experimentar, use apenas os exemplos fictícios. Não apague um registro real para verificar se o botão funciona.
 
-### Fotos com a API atual
+### Etapa 6 — Entenda a espera, o carregamento e os erros
 
-Usamos ImagePicker().pickImage com ImageSource.gallery, retornando XFile. A seleção é opcional. O formulário lê readAsBytes, verifica o limite de 5 MB e grava base64 junto ao registro. Isso evita depender de caminhos temporários ou URLs blob que deixam de funcionar depois de recarregar a página. O app solicita redimensionamento para até 1200 × 1200 e qualidade 80 onde a plataforma permite.
+Abra lib/controllers/home_controller.dart. HomeController recebe um LoanRepository. Seu método run aguarda a operação solicitada e depois lê a lista atualizada. Enquanto isso, busy informa à tela que uma operação está em andamento.
+
+Sem await, a tela poderia mostrar “salvo” antes de a gravação terminar. Uma falha de disco ou de acesso ao armazenamento ficaria invisível. No projeto, o estado é atualizado após a operação; se algo falhar, a lista anterior permanece disponível e aparece uma mensagem para tentar novamente.
+
+HomePage usa ListenableBuilder para reconstruir a interface quando o controller notifica mudanças. As telas cuidam de apresentação e interação, enquanto o repositório cuida da persistência. Essa separação permite testar uma falha de gravação sem desligar o armazenamento real do computador.
+
+Leia também lib/pages/home_page.dart e lib/pages/stuff_detail_page.dart. Você encontrará o formulário, a busca, os filtros, os cartões responsivos, o indicador de progresso, as mensagens vazias e a confirmação ao descartar alterações não salvas.
+
+### Etapa 7 — Trate datas e fotos sem perder os dados antigos
+
+Uma data de empréstimo representa um dia do calendário. Não precisamos saber o segundo exato em que o livro saiu da estante. A versão atual normaliza loanDate para ano, mês e dia e também grava calendarDate como YYYY-MM-DD.
+
+O campo antigo loanDate em milissegundos continua sendo mantido por compatibilidade. Na leitura de um registro legado, ele é interpretado no fuso do dispositivo, como ocorria antes. Não é possível reconstruir o fuso original apenas a partir desse valor. As novas gravações usam calendarDate para preservar o dia do calendário entre fusos.
+
+Para as fotos, o app chama ImagePicker().pickImage com ImageSource.gallery. O retorno é um XFile, e não o File usado nas APIs antigas. Se a pessoa cancelar, o resultado será nulo e nenhuma foto precisa ser substituída.
 
 ```dart
 final file = await ImagePicker().pickImage(
@@ -154,43 +197,96 @@ if (file != null) {
 }
 ```
 
-Esse trecho ilustra a seleção; veja o tratamento completo de cancelamento, erros e estado no formulário. Importe dart:convert e package:image_picker/image_picker.dart para usar essas APIs. O app atual escolhe uma imagem da galeria/arquivo, não tira fotos com a câmera. As antigas permissões Android CAMERA, WRITE_EXTERNAL_STORAGE e READ_EXTERNAL_STORAGE não fazem parte dessa implementação. No iOS, Info.plist informa o motivo de acesso à fototeca. A configuração atual usa Android API 24 ou superior e iOS 15 ou superior.
+O trecho usa dart:convert e package:image_picker/image_picker.dart e deve ser executado em uma função async. O formulário completo trata cancelamento, erro e estado de carregamento. Ele solicita redimensionamento e qualidade onde a plataforma oferece esse recurso e limita os bytes finais a 5 MB.
 
-Fotos antigas continuam usando photoPath apenas nas plataformas nativas, quando o arquivo ainda existe. Se ele não existir ou não puder ser exibido, mostramos um ícone sem apagar o caminho salvo. A Web mostra um marcador para caminhos de arquivo nativos. Payloads de foto têm teste de persistência; a seleção visual automatizada ficou limitada pela configuração de acesso a arquivos da extensão do navegador, portanto não foi apresentada como teste manual concluído.
+Os bytes são codificados em base64 e gravados junto ao registro. Por quê? Um caminho temporário ou uma URL blob pode deixar de existir depois que a página ou o processo é encerrado. Um caminho nativo também não é uma imagem acessível no navegador.
 
-### Controller e telas
+Fotos antigas continuam referenciadas por photoPath nas plataformas nativas. Se o arquivo ainda existe, pode ser exibido. Se não existe, mostramos um marcador sem apagar o caminho salvo. A Web mostra um marcador para caminhos nativos; ela não importa automaticamente os arquivos do telefone.
 
-HomeController.run espera a operação e uma nova leitura do banco. Enquanto ela executa, busy impede gravações concorrentes pela interface. Se houver falha, a lista anterior permanece visível, aparece uma mensagem e é possível tentar novamente. O diário usa ListenableBuilder para refletir essas mudanças.
+A implementação atual seleciona imagens da galeria/arquivo. Ela não usa câmera, localização, contatos, SMS ou chamadas. As antigas permissões Android de câmera e armazenamento amplo não são necessárias para esse fluxo. O iOS inclui a descrição de acesso à fototeca. A configuração do projeto usa Android API 24 ou superior e iOS 15 ou superior.
 
-Na HomePage há resumo, busca por nome/objeto, cartões em uma, duas ou três colunas conforme a largura, filtros e ações visíveis. O formulário usa Form e TextFormField, showDatePicker limitado ao dia atual, controles Material 3 e confirmação antes de descartar alterações. Os controllers de texto são liberados em dispose. Há estados vazios, de carregamento e de erro; a navegação por teclado usa os controles padrão do Flutter.
+Antes de atualizar uma instalação antiga, faça backup de borrowed_stuff.db e das fotos referenciadas. Preserve o identificador do app e não desinstale a versão anterior primeiro. O arquivo, a store e as chaves foram mantidos. Os mapas antigos são lidos sem regravação na abertura; ao editar, o registro recebe schemaVersion 2 e os campos novos. Campos ausentes assumem valores compatíveis, como returned igual a false.
 
-Arquivos completos:
-https://github.com/kleberandrade/borrowed-stuff-flutter/blob/master/lib/main.dart
-https://github.com/kleberandrade/borrowed-stuff-flutter/blob/master/lib/controllers/home_controller.dart
-https://github.com/kleberandrade/borrowed-stuff-flutter/blob/master/lib/pages/home_page.dart
-https://github.com/kleberandrade/borrowed-stuff-flutter/blob/master/lib/pages/stuff_detail_page.dart
+Lembre-se: o diário nativo e o diário Web são armazenamentos separados. Limpar os dados do site remove o diário daquele navegador. Exportação, restauração e sincronização ainda não são funcionalidades prontas; uma delas será proposta nos exercícios.
 
-### Testando antes de experimentar
+### Etapa 8 — Verifique comportamento, não apenas a aparência
+
+Execute os comandos abaixo com Flutter 3.50.0 selecionado:
 
 ```sh
 dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test --coverage
 flutter build web
+flutter pub outdated
 ```
 
-A suíte verifica entradas inválidas, datas/fotos antigas, descrições repetidas, ids antigos incorretos, migração ao atualizar, exclusão, reabertura de arquivo, exemplos idempotentes, persistência de fotos, recuperação do controller após falha e o fluxo de validação/cadastro/devolução em largura de celular. O workflow do GitHub repete formatação, análise, testes e build Web com Flutter 3.41.9. Consulte o resultado real na aba Actions; nenhum percentual de cobertura ou resultado de mutação foi inventado.
+A análise encontra problemas estáticos. Os testes de domínio verificam regras de entrada. Os testes de persistência verificam chaves, fotos, descrições repetidas e compatibilidade, incluindo fechar e reabrir um arquivo. O teste de controller simula uma falha e uma nova tentativa. O teste de widgets percorre validação, cadastro e devolução em largura de celular.
 
-Na validação em Chrome, foram carregados exemplos, marcada uma devolução e recarregada a página para conferir a persistência. Screenshots reais ficam em docs/screenshots. Não confunda build ou viewport móvel com execução em telefone físico. Os resultados e limites dos builds nativos ficam em docs/WORK_LOG.md.
+Depois, verifique o app real: registre um objeto fictício, edite a pessoa, busque pelo nome, marque a devolução e recarregue a página. Confira também a navegação com Tab e o layout em uma janela estreita. Um build aprovado não prova que o app foi executado em telefone físico.
 
-### Desafios para continuar a aula
+A suíte existente tem oito testes e o workflow do GitHub executa formatação, análise, testes e build Web. Consulte o resultado real na aba Actions. Os resultados de builds nativos e os limites de validação ficam em docs/WORK_LOG.md. A automação anterior de seleção de fotos foi limitada pelo acesso a arquivos da extensão do navegador; o roundtrip dos bytes é testado separadamente no Sembast.
 
-Adicione exportação/restauração com teste de compatibilidade; experimente uma data prevista de devolução; implemente animações respeitando movimento reduzido; ou estude uma ação explícita de telefone com url_launcher. O telefone já é opcional e validado nesta versão; não é necessário instalar BrasilFields para executar o projeto.
+### Código, créditos e referências
 
-Referência de terceiros preservada para a extensão de chamadas, SMS e e-mail: https://medium.com/flutter-community/flutter-making-phone-calls-sending-sms-and-emails-with-url-launcher-56414b06f84e . Esse artigo é somente referência e não foi alterado. Câmera, chamadas e mensagens não são funcionalidades implementadas nesta edição.
+Projeto completo: https://github.com/kleberandrade/borrowed-stuff-flutter . O README documenta a instalação e os comandos. O material histórico da primeira edição, de 2020, está em docs/legacy-readme.pt-BR.md; suas instruções de Dart 2 não devem ser usadas para a versão atual.
 
-### Código, créditos e licença
+A referência de terceiros sobre chamadas, SMS e e-mail continua disponível para quem quiser estudar uma extensão futura: https://medium.com/flutter-community/flutter-making-phone-calls-sending-sms-and-emails-with-url-launcher-56414b06f84e . Esse artigo não foi alterado e essas ações não estão implementadas no app desta aula.
 
-Projeto completo: https://github.com/kleberandrade/borrowed-stuff-flutter . O README em inglês documenta requisitos e comandos verificados. O material original de 2020, incluindo screenshots, exercícios e créditos, está preservado em docs/legacy-readme.pt-BR.md e deve ser lido como histórico de Dart 2.
+Aplicativo e notas de aula de Kleber de Oliveira Andrade, disciplina de Programação Mobile. Código sob MIT, copyright 2020 Kleber de Oliveira Andrade. Bibliotecas e referências de terceiros mantêm suas licenças e créditos. Capa original desta revisão criada com auxílio de IA.
 
-Aplicativo e notas de aula de Kleber de Oliveira Andrade, disciplina de Programação Mobile. Código sob MIT, copyright 2020 Kleber de Oliveira Andrade; bibliotecas e conteúdos de terceiros mantêm suas próprias licenças e créditos.
+### Cinco exercícios para consolidar e ampliar o projeto
+
+Os exercícios abaixo são propostas de extensão, não funcionalidades já entregues. Faça um por vez: escreva o teste que descreve a regra nova, veja a falha esperada, implemente a menor mudança e execute novamente a suíte. Use registros fictícios e mantenha um commit separado por exercício. Os exercícios 2 e 3 formam uma sequência; os demais podem ser feitos separadamente.
+
+### Exercício 1 — Proteja os limites de texto no domínio
+
+Objetivo: impedir que outra entrada de dados contorne os limites do formulário. Hoje a interface limita o objeto a 120 caracteres e o nome a 100; transforme esses limites também em regras explícitas do modelo para registros novos ou editados.
+
+Comece pelos testes. Verifique uma descrição com 120 caracteres e outra com 121; faça o mesmo para nomes com 100 e 101. Inclua texto vazio e espaços nas extremidades. Decida se a contagem será feita após trim e mantenha essa decisão consistente entre modelo e tela.
+
+Dica: centralize os limites em um único lugar e reutilize-os no formulário. Preserve a leitura dos registros legados: uma atualização do app não deve esconder dados antigos só porque eles ultrapassam uma regra nova.
+
+Critério de conclusão: valores no limite são aceitos, valores acima dele são rejeitados com mensagem compreensível e um registro antigo fora do limite continua legível. A validação funciona mesmo ao chamar o modelo diretamente em um teste, sem abrir a tela.
+
+### Exercício 2 — Adicione uma data prevista de devolução
+
+Objetivo: representar um prazo sem mudar o significado da data do empréstimo. Adicione um campo opcional de data prevista ao modelo, à serialização e ao formulário. Um registro sem prazo deve continuar válido, e o prazo não pode ser anterior ao empréstimo.
+
+Antes da implementação, teste quatro casos: ausência de prazo, prazo igual ao dia do empréstimo, prazo posterior e prazo anterior. Depois crie um teste que leia um mapa antigo sem o campo novo, atualize outro atributo e confira que a migração não altera a data original.
+
+Dica: trabalhe com dias do calendário, como loanDate, e normalize os horários. Não use o instante atual para decidir se o prazo pode ser cadastrado: um empréstimo antigo pode ter um prazo já vencido e ainda precisar ser registrado.
+
+Critério de conclusão: o prazo pode ser escolhido, alterado e removido; os casos válidos sobrevivem a fechar e reabrir o banco; o caso inválido mostra uma mensagem; nenhum registro legado é descartado. Documente o novo campo de forma que uma versão futura consiga interpretá-lo.
+
+### Exercício 3 — Crie o filtro “Em atraso” com um relógio testável
+
+Objetivo: usar a data prevista do exercício 2 para responder quais objetos precisam de atenção. Defina a regra antes da interface: um empréstimo está atrasado quando não foi devolvido, tem prazo e esse prazo é anterior ao dia consultado. Vencer hoje ainda não significa estar atrasado.
+
+Escreva uma função que receba o empréstimo e a data de referência. Teste prazo ontem, hoje e amanhã; ausência de prazo; e um objeto devolvido cujo prazo ficou no passado. Em seguida, acrescente o filtro na HomePage e ordene os atrasados do prazo mais antigo para o mais recente.
+
+Dica: receber a data como argumento torna o teste previsível. Evite espalhar DateTime.now pelo filtro, pela ordenação e pelo contador. Combine o novo filtro com a busca já existente por objeto ou pessoa.
+
+Critério de conclusão: a regra passa nos cinco cenários, não depende do dia em que o teste é executado e a tela mostra um estado vazio específico quando não há atrasos. Um item devolvido sai do filtro depois que a operação é persistida.
+
+### Exercício 4 — Implemente backup e restauração com validação prévia
+
+Objetivo: permitir transportar o diário entre instalações sem depender de copiar caminhos internos do aplicativo. Defina um JSON com versão de formato, registros e fotos incorporadas que realmente existam no backup. Informe quando uma foto legada não puder ser incluída; um caminho sozinho não transporta seu conteúdo.
+
+Separe duas operações: analisar/validar o arquivo e efetivar a restauração. Mostre uma prévia com quantidade de registros e peça confirmação antes de substituir o diário. Para este exercício, adote explicitamente a estratégia “substituir tudo”; misturar registros de bancos diferentes por suas chaves inteiras é um problema adicional.
+
+Escreva os testes antes da gravação: arquivo válido com ida e volta, JSON inválido, versão desconhecida, campo obrigatório ausente e falha durante a restauração. Verifique que dados antigos permanecem intactos se a entrada for rejeitada ou a transação falhar. Restaurar o mesmo backup duas vezes deve produzir o mesmo conjunto, sem duplicatas.
+
+Dica: mantenha a validação e a transformação em funções testáveis. Execute a substituição em uma transação Sembast. Não faça gravações parciais enquanto ainda está descobrindo se o arquivo é válido.
+
+Critério de conclusão: empréstimos, datas, situações e fotos incluídas no backup são recuperados; erros não apagam o diário; a interface informa o resultado; e a operação funciona no alvo que você disser suportar. Documente separadamente os alvos ainda não testados.
+
+### Exercício 5 — Torne o fluxo utilizável com teclado e texto ampliado
+
+Objetivo: verificar se alguém consegue registrar e devolver um objeto sem depender de mouse, gesto de arrastar ou texto pequeno. Percorra a tela inicial, o formulário, o seletor de data e os diálogos usando teclado. Observe a ordem do foco, os rótulos anunciados e a visibilidade de cada ação.
+
+Crie testes de widgets para larguras de 320 e 1200 pixels e para escala de texto 2.0. Inclua um objeto e um nome longos e confira que não há overflow. Teste a mensagem de campo obrigatório, a confirmação de descarte e uma falha do repositório. Para erros, verifique tanto a mensagem quanto a possibilidade de tentar novamente.
+
+Dica: use controles padrão e rótulos descritivos, preserve o foco visível e evite alturas fixas que cortem texto. Um teste de widgets ajuda a detectar a quebra de layout, mas não substitui experimentar o app com teclado e, quando disponível, leitor de tela.
+
+Critério de conclusão: o fluxo principal pode ser completado com teclado, os controles têm nomes compreensíveis, o conteúdo ampliado continua acessível por rolagem e os testes não registram exceções de layout. Entregue uma pequena lista do que foi testado manualmente e screenshots reais das duas larguras.
