@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1420" viewBox="0 0 1400 1420" role="img" aria-label="O que acontece ao tocar em Salvar?">
+<rect width="100%" height="100%" fill="white"/>
+<text x="70" y="105.2" font-family="Arial, sans-serif" font-size="54" font-weight="700" fill="#18372d">O que acontece ao tocar em Salvar?</text>
+<text x="70" y="161.6" font-family="Arial, sans-serif" font-size="32" font-weight="400" fill="#52645c">Fluxo real entre o formulário, o controller e o repositório.</text>
+<rect x="70" y="215" width="800" height="145" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="269.4" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#18372d">1. O formulário valida</text>
+<text x="98" y="311.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Form.validate() verifica os campos.</text>
+<text x="98" y="350.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Stuff aplica as regras do domínio.</text>
+<polyline points="470,360 470,410" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="470.0,410.0 462.3,392.7 477.7,392.7" fill="#285c4b"/>
+<rect x="70" y="410" width="800" height="145" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="462.8" font-family="Arial, sans-serif" font-size="36" font-weight="700" fill="#18372d">2. O controller sinaliza a espera</text>
+<text x="98" y="506.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">busy = true; error = null</text>
+<text x="98" y="545.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">notifyListeners() mostra o estado atual.</text>
+<polyline points="470,555 470,605" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="470.0,605.0 462.3,587.7 477.7,587.7" fill="#285c4b"/>
+<rect x="70" y="605" width="800" height="145" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="657.8" font-family="Arial, sans-serif" font-size="36" font-weight="700" fill="#18372d">3. O DAO grava e a lista é relida</text>
+<text x="98" y="701.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">await operation() → dao.save(item)</text>
+<text x="98" y="740.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">items = await dao.readAll()</text>
+<polyline points="470,750 470,810" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="470.0,810.0 462.3,792.7 477.7,792.7" fill="#285c4b"/>
+<rect x="70" y="810" width="800" height="145" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="862.8" font-family="Arial, sans-serif" font-size="36" font-weight="700" fill="#18372d">4. O estado final é comunicado</text>
+<text x="98" y="906.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">finally: busy = false</text>
+<text x="98" y="945.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">notifyListeners() reconstrói a interface.</text>
+<polyline points="470,955 470,1015" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="470.0,1015.0 462.3,997.7 477.7,997.7" fill="#285c4b"/>
+<rect x="70" y="1015" width="800" height="160" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="1067.8" font-family="Arial, sans-serif" font-size="36" font-weight="700" fill="#18372d">5. A tela decide o próximo passo</text>
+<text x="98" y="1111.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Sucesso: volta para o diário atualizado.</text>
+<text x="98" y="1150.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Falha: mostra a mensagem e mantém a edição.</text>
+<rect x="960" y="605" width="370" height="260" rx="20" fill="#f8ede5" stroke="#648c7b" stroke-width="2"/>
+<text x="988" y="656.2" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#18372d">Se houver erro</text>
+<text x="988" y="701.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">catch define error.</text>
+<text x="988" y="740.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">run retorna false.</text>
+<text x="988" y="779.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">A lista anterior</text>
+<text x="988" y="818.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">é preservada.</text>
+<polyline points="870,670 960,670" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="960.0,670.0 942.7,677.7 942.7,662.3" fill="#285c4b"/>
+<polyline points="1145,865 1145,900 870,900" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="870.0,900.0 887.3,892.3 887.3,907.7" fill="#285c4b"/>
+<text x="70" y="1275.6" font-family="Arial, sans-serif" font-size="32" font-weight="400" fill="#52645c">await ordena o trabalho: não confirme uma gravação antes de esperá-la.</text>
+<text x="70" y="1334.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#52645c">busy impede outra operação do controller enquanto a atual está em andamento.</text>
+</svg>

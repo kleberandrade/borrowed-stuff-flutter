@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1360" viewBox="0 0 1400 1360" role="img" aria-label="Quem faz o quê no aplicativo?">
+<rect width="100%" height="100%" fill="white"/>
+<text x="70" y="105.2" font-family="Arial, sans-serif" font-size="54" font-weight="700" fill="#18372d">Quem faz o quê no aplicativo?</text>
+<text x="70" y="161.6" font-family="Arial, sans-serif" font-size="32" font-weight="400" fill="#52645c">Leia de cima para baixo: interface → coordenação → persistência.</text>
+<rect x="70" y="220" width="770" height="150" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="274.4" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#18372d">Telas</text>
+<text x="98" y="316.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">HomePage e StuffDetailPage</text>
+<text x="98" y="355.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Exibem dados e recebem ações.</text>
+<rect x="930" y="220" width="400" height="195" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="958" y="274.4" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#18372d">Stuff</text>
+<text x="958" y="316.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Dados do empréstimo.</text>
+<text x="958" y="355.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Valida a nova entrada.</text>
+<text x="958" y="394.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">models/stuff.dart</text>
+<polyline points="840,290 930,290" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="930.0,290.0 912.7,297.7 912.7,282.3" fill="#285c4b"/>
+<polyline points="455,370 455,430" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="455.0,430.0 447.3,412.7 462.7,412.7" fill="#285c4b"/>
+<rect x="70" y="430" width="770" height="150" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="484.4" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#18372d">HomeController</text>
+<text x="98" y="526.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Controla busy, error e a lista.</text>
+<text x="98" y="565.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Espera a operação e a nova leitura.</text>
+<polyline points="455,580 455,640" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="455.0,640.0 447.3,622.7 462.7,622.7" fill="#285c4b"/>
+<rect x="70" y="640" width="770" height="150" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="692.8" font-family="Arial, sans-serif" font-size="36" font-weight="700" fill="#18372d">LoanRepository → StuffDao</text>
+<text x="98" y="736.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">O contrato separa a aplicação do banco.</text>
+<text x="98" y="775.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">O DAO implementa as operações Sembast.</text>
+<rect x="930" y="485" width="400" height="195" rx="20" fill="#f6f5f0" stroke="#648c7b" stroke-width="2"/>
+<text x="958" y="539.4" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#18372d">Nos testes</text>
+<text x="958" y="581.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Um repositório falso</text>
+<text x="958" y="620.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">pode testar a interface.</text>
+<text x="958" y="659.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">O DAO tem testes reais.</text>
+<polyline points="455,790 455,850" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="455.0,850.0 447.3,832.7 462.7,832.7" fill="#285c4b"/>
+<rect x="70" y="850" width="770" height="140" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="904.4" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#18372d">Sembast: store Stuff</text>
+<text x="98" y="946.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Chave inteira → mapa do empréstimo</text>
+<polyline points="455,990 455,1045 355,1045 355,1095" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="355.0,1095.0 347.3,1077.7 362.7,1077.7" fill="#285c4b"/>
+<polyline points="455,990 455,1045 1045,1045 1045,1095" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="1045.0,1095.0 1037.3,1077.7 1052.7,1077.7" fill="#285c4b"/>
+<rect x="70" y="1095" width="570" height="150" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="1149.4" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#18372d">Web</text>
+<text x="98" y="1191.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">databaseFactoryWeb</text>
+<text x="98" y="1230.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">IndexedDB da origem do site</text>
+<rect x="760" y="1095" width="570" height="150" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="788" y="1149.4" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#18372d">Nativo</text>
+<text x="788" y="1191.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">databaseFactoryIo</text>
+<text x="788" y="1230.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Arquivo borrowed_stuff.db</text>
+<text x="70" y="1316.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#52645c">A fábrica é escolhida na abertura. Web e nativo têm bancos separados.</text>
+</svg>

@@ -6,7 +6,7 @@ Você emprestou um livro para uma amiga. Algumas semanas depois, lembra do livro
 
 Vamos acompanhar o caminho completo de um empréstimo: preencher o formulário, validar os dados, gravar no banco, exibir na tela e registrar a devolução. Também veremos como atualizar um aplicativo sem perder os registros de quem já usava a versão anterior.
 
-Edição atualizada em 17/11/2026: Flutter 3.50.0, Dart 3.14.0 e pacotes atuais compatíveis. A capa foi criada especialmente para esta aula com auxílio de IA; ela é uma ilustração, não uma captura do aplicativo. As telas reais e o código estão no repositório.
+Edição atualizada em 17/11/2026: Flutter 3.50.0, Dart 3.14.0 e pacotes atuais compatíveis. A capa foi criada especialmente para esta aula com auxílio de IA; ela é uma ilustração, não uma captura do aplicativo. As capturas reais do app, os diagramas e o código aparecem ao longo da aula; os arquivos também estão no repositório.
 
 ### Antes de começar: o que você precisa saber
 
@@ -32,6 +32,10 @@ flutter run -d chrome --web-port 8767
 Confira a versão informada pelo primeiro comando antes de continuar. O projeto agora exige Dart 3.14 ou superior e Flutter 3.50 ou superior. Se a resolução das dependências falhar com um SDK antigo, corrija a versão selecionada; apagar o lockfile não resolve um requisito de SDK.
 
 Na primeira abertura, escolha “Experimentar com exemplos locais”. O app cria três empréstimos fictícios apenas quando o diário está vazio. Busque pelo nome de uma pessoa, marque uma devolução e abra o filtro “Devolvidos”. Recarregue a página: o registro deve continuar lá.
+
+![Figura 1 — Diário real no Chrome, com dois empréstimos em circulação e uma devolução nos dados fictícios.](tutorial/01-journal.jpg)
+
+Observe na Figura 1 como a finalidade aparece na tela: o resumo mostra quantos objetos estão fora, a busca procura objeto ou pessoa e os filtros separam a circulação do histórico. Os cartões exibem descrição, pessoa e data; o menu concentra edição/exclusão e o botão de devolução fica visível. As capturas desta aula são da versão Web em execução, não de um telefone físico.
 
 Por que fixamos a porta 8767? O banco do navegador pertence à origem, isto é, à combinação de protocolo, endereço e porta. Abrir em outra porta pode mostrar um diário vazio, porque é outro espaço de armazenamento. Isso não significa que o banco anterior foi apagado.
 
@@ -80,6 +84,10 @@ Agora abra lib e siga esta divisão. Em models, Stuff descreve um empréstimo. E
 
 Uma forma de seguir o fluxo é: botão Salvar → formulário validado → Stuff → HomeController → LoanRepository/StuffDao → Sembast → lista atualizada. A tela não precisa conhecer o formato físico do arquivo. O modelo não precisa saber qual botão foi pressionado.
 
+![Figura 2 — Diagrama das responsabilidades: telas, modelo Stuff, controller, repositório e armazenamento Web ou nativo.](tutorial/04-architecture.png)
+
+Leia a Figura 2 de cima para baixo. A tela cria um Stuff a partir da entrada; o controller coordena a operação; o DAO executa a persistência. LoanRepository é o contrato que permite trocar a implementação nos testes. Os dois blocos na base são alternativas escolhidas ao abrir o app: um arquivo nativo não é compartilhado automaticamente com o IndexedDB do navegador. As setas representam colaboração; as caixas não são tabelas do banco.
+
 Referência conceitual da aula original: vídeo “MVC // Dicionário do Programador”, do Código Fonte TV: https://www.youtube.com/watch?v=jyTNhT67ZyY . O vídeo é de terceiros e não foi modificado.
 
 ### Etapa 3 — Modele um empréstimo válido
@@ -87,6 +95,10 @@ Referência conceitual da aula original: vídeo “MVC // Dicionário do Program
 Abra lib/models/stuff.dart. Os campos principais são description, contactName e loanDate. O id começa nulo porque a chave ainda será criada pelo banco. phone, photoPath e photoBase64 são opcionais; returned informa se o objeto já foi devolvido.
 
 Os dados são imutáveis: os campos são final. Para mudar uma situação, criamos outra representação e a gravamos na mesma chave. Isso evita alterar um objeto silenciosamente enquanto a tela ainda exibe um estado anterior.
+
+![Figura 3 — Formulário real de novo empréstimo, com foto opcional, objeto, pessoa, telefone e seletor de data.](tutorial/02-form.jpg)
+
+A Figura 3 mostra de onde vêm os dados do modelo. “Objeto” preenche description; “Nome da pessoa”, contactName; o seletor fornece loanDate. O telefone e a foto são opcionais. Essa correspondência ajuda a acompanhar o que sai da tela e o que será salvo no mapa.
 
 ```dart
 final item = Stuff(
@@ -100,6 +112,37 @@ final item = Stuff(
 Escolha uma data igual ou anterior ao dia em que executar o exemplo. O construtor remove espaços nas extremidades dos nomes, rejeita descrição ou pessoa vazia e impede uma data futura. O telefone é opcional; quando preenchido, precisa conter de 8 a 15 dígitos e apenas a pontuação permitida. Uma sequência como “--------” não é um telefone válido.
 
 Há duas camadas de validação com funções diferentes. O TextFormField mostra uma mensagem perto do campo para orientar a pessoa. O modelo protege a regra quando o dado vem de outro caminho, como um teste ou uma futura importação. Não confie apenas no teclado ou no aspecto visual do formulário.
+
+Veja o campo de objeto em lib/pages/stuff_detail_page.dart. Este trecho pertence ao State do formulário: description é seu TextEditingController e saving informa se uma gravação está em andamento.
+
+```dart
+TextFormField(
+                  controller: description,
+                  enabled: !saving,
+                  maxLength: 120,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Objeto',
+                    hintText: 'Ex.: livro O Hobbit',
+                    prefixIcon: Icon(Icons.inventory_2_outlined),
+                  ),
+                  validator: requiredText,
+                )
+```
+
+O controller do campo mantém o texto digitado. maxLength limita a digitação na interface; enabled impede alterar o campo durante a gravação; validator decide se a entrada pode prosseguir. A função usada pelos campos obrigatórios é:
+
+```dart
+String? requiredText(String? value) =>
+      value == null || value.trim().isEmpty ? 'Campo obrigatório' : null;
+```
+
+Em um validator do Flutter, retornar null significa “válido”; retornar uma String mostra essa mensagem como erro. No método save, form.currentState!.validate() executa os validadores. Se algum campo falhar, a função retorna antes de criar o Stuff ou chamar o repositório.
+
+![Figura 4 — Validação real ao tentar salvar sem objeto e sem nome: os dois campos exibem Campo obrigatório.](tutorial/03-validation.jpg)
+
+Na Figura 4, tente relacionar cada mensagem ao retorno de requiredText. O app mantém o formulário aberto para correção. Não houve cadastro incompleto no banco: a validação encerrou esse caminho antes da gravação.
 
 Stuff.fromMap é a fronteira de leitura do armazenamento. Ela também aceita dados legados que o app antigo permitia, como campos vazios ou datas futuras. Isso evita tornar um empréstimo antigo inacessível depois da atualização. Ao editar, a pessoa deve corrigir os campos para atender às regras atuais.
 
@@ -151,6 +194,10 @@ Se id é nulo, add cria uma chave e devolvemos um Stuff com essa identidade. Se 
 
 Por que não localizar um registro pela descrição? Porque duas pessoas podem receber objetos com o mesmo nome. Dois registros “Livro” precisam continuar independentes. A descrição é conteúdo; a chave é identidade. A versão antiga podia gravar ids incorretos ao atualizar pela descrição, e essa situação está coberta pelos testes de compatibilidade.
 
+![Figura 5 — Exemplo de compatibilidade: a chave Sembast 4 prevalece sobre um id 99 incorreto no mapa e a edição preserva a mesma chave e a foto.](tutorial/06-record-key.png)
+
+A Figura 5 usa um exemplo do teste do repositório. O mapa antigo pode conter id errado, mas a chave 4 continua apontando para o registro certo. Na leitura, Stuff.fromMap recebe snapshot.key; na edição, store.record(item.id!).put grava naquela chave. Assim, atualizar o item não depende de uma descrição que outra pessoa também pode usar.
+
 Para marcar a devolução de um empréstimo que já foi salvo, a operação principal é:
 
 ```dart
@@ -159,11 +206,46 @@ await dao.save(saved.withReturned(true));
 
 Aqui, dao é o repositório conectado e saved é o Stuff devolvido por uma gravação anterior. O trecho deve estar dentro de uma função async. O registro permanece no banco e aparece no filtro “Devolvidos”. Marcar uma devolução não equivale a excluir o histórico.
 
+![Figura 6 — Histórico real com O Hobbit devolvido e a ação Emprestar novamente, sem excluir o registro.](tutorial/07-returned.jpg)
+
+Compare a Figura 6 com a lista inicial. A mudança está em returned: o item sai do filtro “Emprestados” e passa para “Devolvidos”. O título, a pessoa e a data continuam disponíveis. “Emprestar novamente” grava returned igual a false no mesmo registro; essa versão não cria um histórico separado de cada ciclo de empréstimo.
+
 A exclusão usa dao.delete com a chave do item selecionado e exige confirmação na interface. Para experimentar, use apenas os exemplos fictícios. Não apague um registro real para verificar se o botão funciona.
 
 ### Etapa 6 — Entenda a espera, o carregamento e os erros
 
 Abra lib/controllers/home_controller.dart. HomeController recebe um LoanRepository. Seu método run aguarda a operação solicitada e depois lê a lista atualizada. Enquanto isso, busy informa à tela que uma operação está em andamento.
+
+![Figura 7 — Sequência de salvar: validar, indicar espera, gravar e reler, comunicar o resultado e voltar ao diário ou manter a edição.](tutorial/05-save-flow.png)
+
+A Figura 7 acompanha este método real de HomeController. Os comentários explicativos abaixo foram acrescentados à transcrição; as instruções são as mesmas do projeto.
+
+```dart
+Future<bool> run(Future<void> Function() operation) async {
+    // Não inicia outra operação enquanto esta ainda está em andamento.
+    if (busy) return false;
+    busy = true;
+    error = null;
+    notifyListeners();
+    try {
+      // Aguarda a gravação/exclusão antes de reler os dados.
+      await operation();
+      items = await dao.readAll();
+      return true;
+    } catch (_) {
+      error = 'Não foi possível acessar os dados. Tente novamente.';
+      return false;
+    } finally {
+      // Libera o estado de espera tanto no sucesso quanto na falha.
+      busy = false;
+      notifyListeners();
+    }
+  }
+```
+
+A operação recebida é uma função que devolve Future<void>. No cadastro, a tela entrega uma função que chama dao.save(item). O primeiro notifyListeners avisa sobre o carregamento. A atribuição de items só acontece quando readAll termina. No catch, a mensagem fica disponível e run retorna false; o finally libera busy e notifica novamente. A tela usa o retorno bool para saber se pode sair do formulário.
+
+Um detalhe importante: esse catch cobre a operação e a releitura. Se a gravação terminar mas a releitura falhar, o dado pode já estar no banco, embora a lista anterior permaneça na tela. O estado de erro informa uma falha de acesso; ele não comprova que nenhum byte foi gravado. Recarregar a lista é a forma de verificar o estado persistido antes de repetir um cadastro.
 
 Sem await, a tela poderia mostrar “salvo” antes de a gravação terminar. Uma falha de disco ou de acesso ao armazenamento ficaria invisível. No projeto, o estado é atualizado após a operação; se algo falhar, a lista anterior permanece disponível e aparece uma mensagem para tentar novamente.
 
@@ -222,6 +304,29 @@ flutter pub outdated
 ```
 
 A análise encontra problemas estáticos. Os testes de domínio verificam regras de entrada. Os testes de persistência verificam chaves, fotos, descrições repetidas e compatibilidade, incluindo fechar e reabrir um arquivo. O teste de controller simula uma falha e uma nova tentativa. O teste de widgets percorre validação, cadastro e devolução em largura de celular.
+
+Este é um exemplo completo de teste de domínio, retirado de test/domain_test.dart. Ele pode ser lido sem abrir uma tela: a entrada contém apenas sinais de formatação no telefone, e o resultado esperado é a rejeição pelo modelo.
+
+```dart
+import 'package:borrowed_stuff/models/stuff.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test('phone needs digits, not just formatting characters', () {
+    expect(
+      () => Stuff(
+        description: 'Livro',
+        contactName: 'Ana',
+        loanDate: DateTime(2020),
+        phone: '--------',
+      ),
+      throwsArgumentError,
+    );
+  });
+}
+```
+
+A função dentro de expect adia a criação de Stuff para que o teste possa observar a exceção. Se o modelo aceitar esse telefone, o teste falha. Por isso, ele verifica uma regra de negócio; não apenas se um método foi chamado. No repositório há ainda testes de memória e de arquivo para conferir o que acontece depois de fechar e reabrir o banco.
 
 Depois, verifique o app real: registre um objeto fictício, edite a pessoa, busque pelo nome, marque a devolução e recarregue a página. Confira também a navegação com Tab e o layout em uma janela estreita. Um build aprovado não prova que o app foi executado em telefone físico.
 

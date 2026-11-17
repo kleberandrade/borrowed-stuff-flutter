@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1080" viewBox="0 0 1400 1080" role="img" aria-label="A chave identifica; o mapa descreve">
+<rect width="100%" height="100%" fill="white"/>
+<text x="70" y="105.2" font-family="Arial, sans-serif" font-size="54" font-weight="700" fill="#18372d">A chave identifica; o mapa descreve</text>
+<text x="70" y="161.6" font-family="Arial, sans-serif" font-size="32" font-weight="400" fill="#52645c">Exemplo didático baseado no teste de compatibilidade do repositório.</text>
+<rect x="70" y="225" width="560" height="360" rx="20" fill="#f8ede5" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="279.4" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#18372d">Antes: registro legado</text>
+<text x="98" y="321.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Chave Sembast: 4</text>
+<text x="98" y="360.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">id no mapa: 99 (incorreto)</text>
+<text x="98" y="399.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">description: Livro</text>
+<text x="98" y="438.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">contactName: Ana</text>
+<text x="98" y="477.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">photoPath: /old.jpg</text>
+<rect x="770" y="225" width="560" height="360" rx="20" fill="#e6ede6" stroke="#648c7b" stroke-width="2"/>
+<text x="798" y="277.8" font-family="Arial, sans-serif" font-size="36" font-weight="700" fill="#18372d">Depois: editar a mesma chave</text>
+<text x="798" y="321.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Chave Sembast: 4</text>
+<text x="798" y="360.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">id no mapa: 4</text>
+<text x="798" y="399.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">description: Livro</text>
+<text x="798" y="438.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">photoPath: /old.jpg (preservado)</text>
+<text x="798" y="477.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">schemaVersion: 2</text>
+<polyline points="630,400 770,400" fill="none" stroke="#285c4b" stroke-width="5"/>
+<polygon points="770.0,400.0 752.7,407.7 752.7,392.3" fill="#285c4b"/>
+<rect x="70" y="670" width="1260" height="185" rx="20" fill="#f6f5f0" stroke="#648c7b" stroke-width="2"/>
+<text x="98" y="724.4" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#18372d">A leitura usa snapshot.key como identidade</text>
+<text x="98" y="766.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">O id antigo não é usado para localizar outro empréstimo.</text>
+<text x="98" y="805.0" font-family="Arial, sans-serif" font-size="30" font-weight="400" fill="#18372d">Outra descrição “Livro” pode existir com outra chave.</text>
+<text x="70" y="945.6" font-family="Arial, sans-serif" font-size="32" font-weight="400" fill="#52645c">Abertura: lê o formato antigo sem regravar todos os registros.</text>
+<text x="70" y="1000.6" font-family="Arial, sans-serif" font-size="32" font-weight="400" fill="#52645c">Edição: grava os campos novos no mesmo registro e mantém a foto legada.</text>
+</svg>
