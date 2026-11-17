@@ -1,97 +1,70 @@
-# Borrowed Stuff
+# Emprestei? · Borrowed Stuff
 
-[![Language: Dart](https://img.shields.io/badge/Language-Dart-0175C2)](https://github.com/kleberandrade/borrowed-stuff-flutter/blob/master/pubspec.yaml)
-[![Framework: Flutter](https://img.shields.io/badge/Framework-Flutter-02569B)](https://github.com/kleberandrade/borrowed-stuff-flutter/blob/master/pubspec.yaml)
+![Flutter 3.41.9](https://img.shields.io/badge/Flutter-3.41.9-02569B?logo=flutter)
+![Dart 3.11.5](https://img.shields.io/badge/Dart-3.11.5-0175C2?logo=dart)
+[![MIT license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-Flutter classroom app for tracking objects lent to other people.
+An offline journal for objects you lend to other people. Register an object, its borrower, loan date and optional phone/photo; edit details, mark a return, lend again or confirm permanent deletion. Search by object or person and switch between active loans and returned objects.
 
-## Getting started
+Created by **Kleber de Oliveira Andrade** for Mobile Programming classes. The Portuguese UI retains the original purpose, with Material 3, responsive cards, keyboard-accessible controls, a validated form, progress, empty and retry states.
 
-- Select a Flutter release whose bundled Dart SDK satisfies the manifest constraint, then run the commands below from the repository root.
+![The actual Web app with local demonstration data](docs/screenshots/web-desktop.jpg)
+
+## Requirements and run
+
+Verified toolchain: Flutter **3.41.9**, bundled Dart **3.11.5**, Chrome **157** on macOS. No backend, API key, account or Firebase configuration is needed. Do not upgrade a shared Flutter SDK just to run this project.
 
 ```sh
+git clone https://github.com/kleberandrade/borrowed-stuff-flutter.git
+cd borrowed-stuff-flutter
 flutter pub get
-flutter run
+flutter run -d chrome --web-port 8767
 ```
 
-- If the app depends on Firebase or another external service, configure your own service project using the dependencies and original notes; credentials are not supplied by this guide.
+Use a stable host and port for Web data: IndexedDB belongs to that browser origin. In an empty journal, choose **Experimentar com exemplos locais** for three fictional loans. Examples are inserted in a transaction only when the collection is empty; existing data is never replaced. **Novo empréstimo** opens the form. Card menus expose Edit/Delete; return actions are visible buttons. Tab navigates controls, Enter/Space activates focused buttons, and the date picker supports keyboard entry. Unsaved form changes require discard confirmation.
 
-## Recorded requirements
+Photos come from the gallery/file chooser and are stored as base64 in Sembast, after resizing where the platform supports it, with a 5 MB limit. The app uses no camera, location, contacts, SMS or telephone API. Phone numbers are optional and selectable for copying; calling is a possible classroom extension.
 
-- Dart SDK constraint from [`pubspec.yaml`](https://github.com/kleberandrade/borrowed-stuff-flutter/blob/master/pubspec.yaml): `>=2.1.0 <3.0.0`.
+## Architecture
 
-## Repository map
+- `lib/models/stuff.dart`: immutable loan data, required names, non-future local calendar date and optional phone validation; legacy decoding and schema serialization.
+- `lib/database/app_database.dart`: opens `borrowed_stuff.db` once at application startup; Sembast IO in the existing application documents directory, Sembast Web/IndexedDB in browsers.
+- `lib/database/stuff_dao.dart`: injected `LoanRepository` boundary, CRUD keyed by the actual Sembast record key and transactional demonstration data.
+- `lib/controllers/home_controller.dart`: awaited operations, loading/error state and refresh after persistence completes. Failed writes keep the displayed list intact.
+- `lib/pages/`: journal/search/filters and add/edit form; `lib/components/`: photo rendering, including platform-specific legacy file support.
 
-- [lib](https://github.com/kleberandrade/borrowed-stuff-flutter/tree/master/lib)
-- [test](https://github.com/kleberandrade/borrowed-stuff-flutter/tree/master/test)
-- [android](https://github.com/kleberandrade/borrowed-stuff-flutter/tree/master/android)
-- [ios](https://github.com/kleberandrade/borrowed-stuff-flutter/tree/master/ios)
+Sembast Web is pinned to **2.4.4+1** because newer releases require Dart 3.12. The committed lockfile captures the versions resolved with Dart 3.11.5. Obsolete Flushbar, Slidable and date-field plugins were removed in favor of Flutter controls.
 
-## Validation status
+## Data compatibility
 
-This update documents the tracked source and project metadata. It does not certify a successful build, device test or compatibility with a current toolchain. Follow any project-specific validation instructions in the original material.
+Back up the native `borrowed_stuff.db` and referenced photo files before installing over an existing app. Keep the original application identifier when upgrading; this repository preserves it. Do not uninstall the old app first.
 
-## License and attribution
+The filename, `Stuff` collection and integer record keys are unchanged. Legacy maps are read without rewriting the file at startup. The record key overrides the old embedded `id`, which could be wrong when descriptions were duplicated. Editing writes schema 2 to that same key and retains `photoPath`, adding `calendarDate`, `phone`, `photoBase64`, and `returned`. Missing new fields default to empty/false. Old empty fields/future dates remain readable; editing requires valid current input. Deleting affects only the selected key.
 
-No standalone repository-wide license file was identified in this review. Preserve the original credits and any component-specific licenses; this documentation update grants no additional rights.
+Legacy epoch dates are interpreted in the current device timezone, as the original app did. Schema 2 also stores a timezone-independent `YYYY-MM-DD` calendar date. The original timezone cannot be recovered from legacy records alone. New photos no longer depend on temporary file paths. Existing photos display on native platforms when their files still exist; an unavailable photo shows a placeholder without deleting its path. Native files are not automatically imported into the browser. Web and native journals are separate; clearing browser site data removes the Web journal. There is no sync/export feature or encryption layer.
 
----
+## Validation
 
-## Original project material
+```sh
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test --coverage
+flutter build web
+# Optional native checks, requiring platform tooling and user-accepted licenses:
+flutter build apk --debug
+flutter build ios --simulator --no-codesign
+```
 
-# Empréstimo de Objetos
+Tests cover invalid inputs, legacy calendar dates/photos, duplicate descriptions and incorrect embedded IDs, schema updates, deletion, file close/reopen compatibility, idempotent examples, embedded photo persistence, controller failure/retry and a mobile-width widget flow through validation, create and return. `coverage/lcov.info` is generated locally; no coverage percentage or mutation score is claimed. Crapper, Dryer and Mutator are installed but do not support Dart; their scans find no supported source files.
 
-Aplicativo para lembrar dos objetos emprestados criado na disciplina de Programação Mobile, por Kleber de Oliveira Andrade.
+The GitHub workflow `.github/workflows/flutter.yml` runs formatting, analysis, tests and Web compilation on `master` pushes and pull requests, using Flutter 3.41.9. See [the workflow runs](https://github.com/kleberandrade/borrowed-stuff-flutter/actions/workflows/flutter.yml) for actual remote status. See [the verification log](docs/WORK_LOG.md) for native build results, real browser checks and limitations. Browser automation could not complete photo selection because its extension disallows local file access; persistence of photo payloads is covered separately. No physical phone validation is claimed.
 
-Tutorial de criação deste app [clique aqui](https://medium.com/@kleberandrade/criando-um-aplicativo-para-lembrar-dos-objetos-emprestados-com-flutter-e-sembast-6dbf350a7a56).
+Android configuration uses the current Flutter plugin DSL, AGP 8.11.1, Kotlin 2.2.20, Java 17 compilation and Android API 24 minimum. iOS 15 minimum is aligned with the installed Xcode 27 toolchain and the gallery usage description is included. Debug simulator builds select the host architecture to work around the [Flutter 3.41 / Xcode 27 lipo issue](https://github.com/flutter/flutter/issues/188461); device release architectures are unaffected. Native configurations are retained, with no store signing or deployment supplied.
 
-<p align="center">
-    <img src="https://miro.medium.com/max/720/1*trhQYyzZfIj_LsYQGOQ8Vg.png" width="250"/>
-    <img src="https://miro.medium.com/max/720/1*rcw9WulfFColELibTQsA8w.png" width="250"/>
-    <img src="https://miro.medium.com/max/720/1*fiP5mrr67aDnF3uPc3dRxQ.png" width="250"/>
-</p>
+## Classroom notes and credits
 
-<p align="center">
-    <img src="https://miro.medium.com/max/720/1*XZIMgoUfDc_bkr-fhzWvrA.png" width="250"/>
-    <img src="https://miro.medium.com/max/720/1*bRGL1qXFTrtI8NeqUEqBcQ.png" width="250"/>
-    <img src="https://miro.medium.com/max/720/1*YjS4wUASqCh4TFEeEHKPpA.png" width="250"/>
-</p>
+The [original Portuguese tutorial](https://medium.com/@kleberandrade/criando-um-aplicativo-para-lembrar-dos-objetos-emprestados-com-flutter-e-sembast-6dbf350a7a56) teaches this app. [The concrete tutorial revision](docs/medium-update.pt-BR.md) tracks modern APIs and commands. The [historical README](docs/legacy-readme.pt-BR.md) preserves original screenshots, exercises, credits and MIT text; its Dart 2 instructions are historical.
 
+The [Flutter Community article on calls/SMS/email](https://medium.com/flutter-community/flutter-making-phone-calls-sending-sms-and-emails-with-url-launcher-56414b06f84e) is a third-party reference for an optional exercise; it is not part of the implementation and was not edited. Possible next exercises: phone intents with explicit user actions, due dates, export/restore, and list animations respecting reduced-motion settings.
 
-## Como clonar e importar
-
-*   Faça um fork do projeto (precisa ter uma conta no github)
-*   Abra o terminal do Visual Studio Code
-*   Acesse a pasta onde deseja salvar o aplicativo e digite: git clone *link_do_projeto_no_seu_github* **borrowed_stuff**
-*   Clique em File -> Open e abra o projeto (pasta)
-*   Não se esqueça de abrir o arquivo *pubspec.yaml* e salvar (CTRL + S) o arquivo para que os plugins sejam baixados 
-
-## Desafio para aula
-
-*   [ ] Adicionar um campo TextFormField parar armazenar o telefone para contato ([validação de telefone](https://stackoverflow.com/questions/55552230/flutter-validate-a-phone-number-using-regex/55552272), [RegEX](https://api.dart.dev/stable/2.0.0/dart-core/RegExp-class.html) e plugin [BrasilFields](https://pub.dev/packages/brasil_fields) para formatar os campos); Não se esqueça de modificar a classe Stuff para receber o telefone também.
-*   [ ] Validar todos campos do formulário: data de empréstimo deve ser menor ou igual a data de hoje; descrição não pode ser vazio; nome não pode ser vazio; telefone não pode ser vazio e precisa ter a quantidade de números adequada;  Você pode adicionar essa validação entendendo mais sobre [TextFormField](https://flutter.dev/docs/cookbook/forms/validation);
-*   [ ] Adicionar uma animação na lista de objetos ([documentação](https://flutter.dev/docs/catalog/samples/animated-list) e [vídeo tutorial](https://www.youtube.com/watch?v=i7O5T4V59HI));
-*   [ ] Implementar um tema (cores) personalizadas, incluindo fontes e tamanhos (utilize o [panache](https://rxlabz.github.io/panache/#/) para facilitar a configuração das cores);
-*   [ ] Adicionar um botão no StuffCard ao deslizar para esquerda, para realizar uma ligação para o número de telefone, caso ele exista; (plugin [url_launcher](https://pub.dev/packages/url_launcher) e [tutorial](https://medium.com/flutter-community/flutter-making-phone-calls-sending-sms-and-emails-with-url-launcher-56414b06f84e));
-
-## Licença
-
-    Copyright 2020 Kleber de Oliveira Andrade
-    
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-    
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-    
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
+MIT, copyright 2020 Kleber de Oliveira Andrade. See [LICENSE](LICENSE). Third-party packages and Flutter assets retain their own licenses.
